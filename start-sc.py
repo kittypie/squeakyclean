@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
 import time
 import traceback
+import os
+import boto3
 from datetime import datetime
 from gpiozero import LightSensor
 from picamera import PiCamera
@@ -13,6 +15,8 @@ GPIO.setmode(GPIO.BCM)
 ldr = LightSensor(17)
 camera = PiCamera()
 camera.rotation = 90
+s3 = boto3.resource('s3')
+##response = s3.list_buckets()
 
 try:
     time.sleep(2) # to stabilize sensor
@@ -24,9 +28,10 @@ try:
             t = datetime.now()
             timestamp=t.strftime('%b-%d-%Y_%H%M%S')
             print("Started at " + timestamp)
- 
-##            print("Start : " + timestamp)
-##            camera.capture('/home/pi/python/squeakyclean/photos/squeaky-' + timestamp + '.jpg')
+            print("Start : " + timestamp)
+            fileName = '/home/pi/python/squeakyclean/photos/squeaky-' + timestamp + '.jpg'
+            camera.capture(fileName)
+            s3.meta.client.upload_file(fileName, 'squeaky-clean' ,'photos/squeaky-' + timestamp + '.jpg')
             time.sleep(2)
 ##            #print("Start : " , datetime.now())
             camera.stop_preview()
